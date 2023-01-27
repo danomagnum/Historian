@@ -1,0 +1,1 @@
+{"General":{"Host":"localhost","Port":8000},"CIPClass3":[{"Name":"GaragePLC","Address":"192.168.2.241","Path":"1,0","Enable":true,"DefaultRate":1000000000,"Endpoints":[{"TagName":"TestInt","Rate":1000000000,"TagType":195,"Value":0},{"TagName":"TestDint","Rate":1000000000,"TagType":196,"Value":0},{"TagName":"TestBool","Rate":1000000000,"TagType":193,"Value":0}]}]}

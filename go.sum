@@ -1,0 +1,8 @@
+github.com/danomagnum/gologix v0.0.8-Beta h1:ex7cGkvu3H9hV+XBKh21bLDbhpSa12uGj/Sar6h7eWk=
+github.com/danomagnum/gologix v0.0.8-Beta/go.mod h1:D5p8IxiNgGnEb8syZlcsbyPdxTKDQkBJvimmq8Cmq4c=
+github.com/danomagnum/gologix v0.0.9-Beta h1:S2OlB32Dz4OhAuKuBA8a5IeMJPxdzWH6XE0WRXfTI5g=
+github.com/danomagnum/gologix v0.0.9-Beta/go.mod h1:D5p8IxiNgGnEb8syZlcsbyPdxTKDQkBJvimmq8Cmq4c=
+github.com/mattn/go-sqlite3 v1.14.16 h1:yOQRA0RpS5PFz/oikGwBEqvAWhWg5ufRz4ETLjwpU1Y=
+github.com/mattn/go-sqlite3 v1.14.16/go.mod h1:2eHXhiwb8IkHr+BDWZGa96P6+rkvnG63S2DGjv9HUNg=
+github.com/nakabonne/tstorage v0.3.5 h1:AmXhEn6SM94sMy1+bwAs9xg3cuefXBXakcYOMQuQlqI=
+github.com/nakabonne/tstorage v0.3.5/go.mod h1:dgOHx150reQ3xHCqyoU19TImAU0PY78bfwUIG24xNzY=
