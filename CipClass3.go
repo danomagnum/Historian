@@ -18,7 +18,7 @@ type ConfigCIPClass3 struct {
 	Endpoints   []EndpointCIPClass3
 }
 
-func (config *ConfigCIPClass3) Run(ctx context.Context, h Historian) {
+func (config *ConfigCIPClass3) Run(ctx context.Context, h map[string]Historian) {
 	var err error
 	client := gologix.NewClient(config.Address)
 	client.Path, err = gologix.ParsePath(config.Path)
@@ -64,7 +64,7 @@ func (config *ConfigCIPClass3) Run(ctx context.Context, h Historian) {
 
 }
 
-func (config *ConfigCIPClass3) PollGroup(ctx context.Context, client *gologix.Client, rate time.Duration, endpoints []EndpointCIPClass3, h Historian) {
+func (config *ConfigCIPClass3) PollGroup(ctx context.Context, client *gologix.Client, rate time.Duration, endpoints []EndpointCIPClass3, h map[string]Historian) {
 
 	tags := make([]string, len(endpoints))
 	types := make([]gologix.CIPType, len(endpoints))
@@ -92,8 +92,10 @@ func (config *ConfigCIPClass3) PollGroup(ctx context.Context, client *gologix.Cl
 					Name:      fmt.Sprintf("%s.%s", config.Name, endpoints[i].TagName),
 					Value:     values[i],
 				}
+				if endpoints[i].Historian != "" {
+					h[endpoints[i].Historian].C() <- hd
+				}
 			}
-			h.C() <- hd
 		case <-ctx.Done():
 			return
 		}
@@ -101,13 +103,15 @@ func (config *ConfigCIPClass3) PollGroup(ctx context.Context, client *gologix.Cl
 }
 
 type EndpointCIPClass3 struct {
-	TagName string
-	Rate    time.Duration
-	TagType gologix.CIPType
-	Value   any
+	Name      string
+	TagName   string
+	Rate      time.Duration
+	TagType   gologix.CIPType
+	Value     any
+	Historian string
 }
 
-func CipClass3(ctx context.Context, h Historian, configs []ConfigCIPClass3) {
+func CipClass3(ctx context.Context, h map[string]Historian, configs []ConfigCIPClass3) {
 	for i := range configs {
 		go configs[i].Run(ctx, h)
 	}

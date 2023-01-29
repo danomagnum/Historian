@@ -7,25 +7,40 @@ import (
 )
 
 type Config struct {
-	General   ConfigGeneral
+	General       ConfigGeneral
+	DataProviders ConfigDataProviders
+	Historians    ConfigHistorians
+}
+
+type ConfigDataProviders struct {
 	CIPClass3 []ConfigCIPClass3
 }
 
+type ConfigHistorians struct {
+	Influx []ConfigHistorianInflux
+}
+
 func (c *Config) Save(filename string) error {
+
+	dat, err := json.MarshalIndent(*c, "", "	")
+	if err != nil {
+		return fmt.Errorf("problem marshaling: %w", err)
+	}
+
 	f, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("problem saving config to %s: %w", filename, err)
 	}
 	defer f.Close()
 
-	enc := json.NewEncoder(f)
+	_, err = f.Write(dat)
 
-	return enc.Encode(*c)
+	return err
 }
 
 func ConfigNew() *Config {
 	c := new(Config)
-	c.CIPClass3 = make([]ConfigCIPClass3, 0)
+	c.DataProviders.CIPClass3 = make([]ConfigCIPClass3, 0)
 	return c
 }
 
