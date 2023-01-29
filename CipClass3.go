@@ -18,6 +18,10 @@ type ConfigCIPClass3 struct {
 	Endpoints   []EndpointCIPClass3
 }
 
+func (config *ConfigCIPClass3) Init(ctx context.Context, h map[string]Historian) {
+	go config.Run(ctx, h)
+}
+
 func (config *ConfigCIPClass3) Run(ctx context.Context, h map[string]Historian) {
 	var err error
 	client := gologix.NewClient(config.Address)
@@ -109,10 +113,4 @@ type EndpointCIPClass3 struct {
 	TagType   gologix.CIPType
 	Value     any
 	Historian string
-}
-
-func CipClass3(ctx context.Context, h map[string]Historian, configs []ConfigCIPClass3) {
-	for i := range configs {
-		go configs[i].Run(ctx, h)
-	}
 }

@@ -5,8 +5,29 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 )
+
+type ConfigHistorianJSON struct {
+	Name     string
+	FileName string
+}
+
+func (conf ConfigHistorianJSON) Init(ctx context.Context, histmap map[string]Historian) {
+	if conf.Name == "" {
+		log.Print("JSON Historian missing a name.")
+		return
+	}
+	h, err := NewHistorianJSON(conf.FileName)
+	h.Name = conf.Name
+	if err != nil {
+		log.Printf("Failure to load historian %s: %v", conf.Name, err)
+		return
+	}
+	histmap[conf.Name] = h
+	go h.Run(ctx)
+}
 
 func NewHistorianJSON(filename string) (*HistorianJSON, error) {
 	h := new(HistorianJSON)
@@ -24,6 +45,7 @@ func NewHistorianJSON(filename string) (*HistorianJSON, error) {
 }
 
 type HistorianJSON struct {
+	Name        string
 	File        io.WriteCloser
 	JsonEncoder json.Encoder
 	c           chan []HistorianData

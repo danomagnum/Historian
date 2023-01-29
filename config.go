@@ -17,7 +17,9 @@ type ConfigDataProviders struct {
 }
 
 type ConfigHistorians struct {
-	Influx []ConfigHistorianInflux
+	Influx  []ConfigHistorianInflux
+	JSON    []ConfigHistorianJSON
+	Logging []ConfigHistorianLogging
 }
 
 func (c *Config) Save(filename string) error {

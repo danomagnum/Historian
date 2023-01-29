@@ -22,21 +22,23 @@ func (conf ConfigHistorianInflux) Init(ctx context.Context, histmap map[string]H
 		return
 	}
 	h, err := NewHistorianInflux(
+		conf.Name,
 		conf.Server, // server
 		conf.Token,  // token
 		conf.Org,    // organization
 		conf.Bucket, // bucket
 	)
 	if err != nil {
-		log.Printf("Failure to laod historian %s: %v", conf.Name, err)
+		log.Printf("Failure to load historian %s: %v", conf.Name, err)
 		return
 	}
 	histmap[conf.Name] = h
 	go h.Run(ctx)
 }
 
-func NewHistorianInflux(server, token, org, bucket string) (*HistorianInflux, error) {
+func NewHistorianInflux(name, server, token, org, bucket string) (*HistorianInflux, error) {
 	h := new(HistorianInflux)
+	h.Name = name
 	h.c = make(chan []HistorianData, 1024)
 	h.Client = influxdb2.NewClient(server, token)
 	h.WriteAPI = h.Client.WriteAPI(org, bucket)
@@ -50,6 +52,7 @@ func NewHistorianInflux(server, token, org, bucket string) (*HistorianInflux, er
 
 // this only stores float64s!!!
 type HistorianInflux struct {
+	Name     string
 	Server   string
 	Token    string
 	Org      string

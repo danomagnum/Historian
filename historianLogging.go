@@ -6,6 +6,25 @@ import (
 	"time"
 )
 
+type ConfigHistorianLogging struct {
+	Name string
+}
+
+func (conf ConfigHistorianLogging) Init(ctx context.Context, histmap map[string]Historian) {
+	if conf.Name == "" {
+		log.Print("Logging Historian missing a name.")
+		return
+	}
+	h, err := NewHistorianLogging()
+	h.Name = conf.Name
+	if err != nil {
+		log.Printf("Failure to load historian %s: %v", conf.Name, err)
+		return
+	}
+	histmap[conf.Name] = h
+	go h.Run(ctx)
+}
+
 func NewHistorianLogging() (*HistorianLogging, error) {
 	h := new(HistorianLogging)
 	h.c = make(chan []HistorianData, 1024)
@@ -15,8 +34,8 @@ func NewHistorianLogging() (*HistorianLogging, error) {
 	return h, nil
 }
 
-// this only stores float64s!!!
 type HistorianLogging struct {
+	Name      string
 	DataCache map[string][]historianLoggingDataEntry
 	c         chan []HistorianData
 	Timeout   time.Duration

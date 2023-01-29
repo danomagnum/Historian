@@ -49,6 +49,9 @@ func main() {
 		log.Panicf("problem creating config: %v", err)
 	}
 
+	////////////////////////
+	// Load Config
+	////////////////////////
 	conf, err := ConfigLoad("cfg.json")
 	if err != nil {
 		conf = ConfigNew()
@@ -57,21 +60,41 @@ func main() {
 	server_addr := fmt.Sprintf("%s:%d", conf.General.Host, conf.General.Port)
 	log.Printf("Starting server at %s", server_addr)
 
-	// this context will live until the config changes.
-	// eventually the cancel function here will be called by the web interface when
-	// the config changes to stop everything and we'll start over at that point.
-	ctx, _ := context.WithCancel(context.Background())
+	////////////////////////
+	// Main Loop
+	////////////////////////
+	for {
+		// this context will live until the config changes.
+		// eventually the cancel function here will be called by the web interface when
+		// the config changes to stop everything and we'll start over at that point.
+		ctx, _ := context.WithCancel(context.Background())
 
-	Historians := make(map[string]Historian)
-	//h, err := NewHistorianJSON("data/test.json")
-	//h, err := NewHistorianLogging()
-	for i := range conf.Historians.Influx {
-		conf.Historians.Influx[i].Init(ctx, Historians)
+		////////////////////////
+		// Init Historians
+		////////////////////////
+		Historians := make(map[string]Historian)
+
+		for i := range conf.Historians.Influx {
+			conf.Historians.Influx[i].Init(ctx, Historians)
+		}
+		for i := range conf.Historians.JSON {
+			conf.Historians.JSON[i].Init(ctx, Historians)
+		}
+		for i := range conf.Historians.Logging {
+			conf.Historians.Logging[i].Init(ctx, Historians)
+		}
+
+		////////////////////////
+		// Init Data Providers
+		////////////////////////
+		for i := range conf.DataProviders.CIPClass3 {
+			conf.DataProviders.CIPClass3[i].Init(ctx, Historians)
+		}
+
+		////////////////////////
+		// Wait for config change
+		////////////////////////
+		<-ctx.Done()
 	}
-
-	// Start all the drivers
-	CipClass3(ctx, Historians, conf.DataProviders.CIPClass3)
-
-	select {}
 
 }
