@@ -58,35 +58,20 @@ func main() {
 	log.Printf("Starting server at %s", server_addr)
 
 	// this context will live until the config changes.
-	ctx, cancel_func := context.WithCancel(context.Background())
+	// eventually the cancel function here will be called by the web interface when
+	// the config changes to stop everything and we'll start over at that point.
+	ctx, _ := context.WithCancel(context.Background())
 
 	Historians := make(map[string]Historian)
 	//h, err := NewHistorianJSON("data/test.json")
 	//h, err := NewHistorianLogging()
 	for i := range conf.Historians.Influx {
-		h, err := NewHistorianInflux(
-			conf.Historians.Influx[i].Server, // server
-			conf.Historians.Influx[i].Token,  // token
-			conf.Historians.Influx[i].Org,    // organization
-			conf.Historians.Influx[i].Bucket, // bucket
-		)
-		if err != nil {
-			log.Printf("Failure to laod historian %s: %v", conf.Historians.Influx[i].Name, err)
-			continue
-		}
-		Historians[conf.Historians.Influx[i].Name] = h
-		go h.Run(ctx)
-	}
-	//h, err := NewHistorianTStore("data/")
-	if err != nil {
-		log.Panicf("failed to open historian %v", err)
+		conf.Historians.Influx[i].Init(ctx, Historians)
 	}
 
 	// Start all the drivers
 	CipClass3(ctx, Historians, conf.DataProviders.CIPClass3)
 
 	select {}
-
-	cancel_func()
 
 }

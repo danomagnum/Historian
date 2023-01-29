@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
@@ -13,6 +14,25 @@ type ConfigHistorianInflux struct {
 	Token  string
 	Org    string
 	Bucket string
+}
+
+func (conf ConfigHistorianInflux) Init(ctx context.Context, histmap map[string]Historian) {
+	if conf.Name == "" {
+		log.Print("Influx Historian missing a name.")
+		return
+	}
+	h, err := NewHistorianInflux(
+		conf.Server, // server
+		conf.Token,  // token
+		conf.Org,    // organization
+		conf.Bucket, // bucket
+	)
+	if err != nil {
+		log.Printf("Failure to laod historian %s: %v", conf.Name, err)
+		return
+	}
+	histmap[conf.Name] = h
+	go h.Run(ctx)
 }
 
 func NewHistorianInflux(server, token, org, bucket string) (*HistorianInflux, error) {
