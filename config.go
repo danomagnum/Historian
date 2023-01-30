@@ -40,23 +40,23 @@ func (c *Config) Save(filename string) error {
 	return err
 }
 
-func ConfigNew() *Config {
-	c := new(Config)
+func ConfigNew() Config {
+	c := Config{}
 	c.DataProviders.CIPClass3 = make([]ConfigCIPClass3, 0)
 	return c
 }
 
-func ConfigLoad(filename string) (*Config, error) {
+func ConfigLoad(filename string) (Config, error) {
 	f, err := os.Open(filename)
 	if err != nil {
-		return nil, fmt.Errorf("problem opening config file: %w", err)
+		return Config{}, fmt.Errorf("problem opening config file: %w", err)
 	}
 
 	j := json.NewDecoder(f)
-	c := new(Config)
-	err = j.Decode(c)
+	c := Config{}
+	err = j.Decode(&c)
 	if err != nil {
-		return nil, fmt.Errorf("problem parsing config file: %w", err)
+		return Config{}, fmt.Errorf("problem parsing config file: %w", err)
 	}
 
 	return c, nil
