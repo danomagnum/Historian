@@ -114,3 +114,7 @@ type EndpointCIPClass3 struct {
 	Value     any
 	Historian string
 }
+
+func (e EndpointCIPClass3) TypeAsInt() int {
+	return int(e.TagType)
+}

@@ -30,6 +30,7 @@ func WebAPIStart() {
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 	mux.HandleFunc("/Server/", api_ServerConf)
 	mux.HandleFunc("/Providers/", api_ProidersConf)
+	mux.Handle("/Providers/CIPClass3/", http.StripPrefix("/Providers/CIPClass3", webApiCIPClass3_Handler))
 	addr := fmt.Sprintf("%s:%d", activeConf.General.Host, activeConf.General.Port)
 	go http.ListenAndServe(addr, mux)
 

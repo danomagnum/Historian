@@ -1,4 +1,51 @@
 {{template "header.html" . }}
 
+<h1> {{.Conf.Name}}</h1>
+
+<p>
+{{.Conf.Name}}
+{{.Conf.Address}}
+{{.Conf.Path}}
+{{.Conf.Enable}}
+{{.Conf.DefaultRate}}
+</p>
+
+<table>
+    <tr><thead>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Tag</th>
+        <th>Rate</th>
+        <th>Type</th>
+        <th>Historian</th>
+    </thead></tr>
+{{ range $i, $e := .Conf.Endpoints }}
+<tr>
+    <td>
+        {{$i}}
+    </td>
+    <td>
+	<input type="text" value="{{.Name}}">
+    </td><td>
+	<input type="text" value="{{ .TagName }}">
+    </td><td>
+	<input type="text" value="{{ .Rate }}" style="width:5em;">
+    </td><td>
+        <select value ="{{ .TypeAsInt }}">
+            <option value = 0 {{ if eq .TypeAsInt 0 }}selected{{end}}>Unknown</option>
+            <option value = 160 {{if eq .TypeAsInt 160}}selected{{end}}>Struct</option>
+            <option value = 193 {{if eq .TypeAsInt 193}}selected{{end}}>BOOL</option>
+            <option value = 194 {{if eq .TypeAsInt 194}}selected{{end}}>SINT</option>
+            <option value = 195 {{if eq .TypeAsInt 195}}selected{{end}}>INT</option>
+            <option value = 196 {{if eq .TypeAsInt 196}}selected{{end}}>DINT</option>
+            <option value = 197 {{if eq .TypeAsInt 197}}selected{{end}}>LINT</option>
+            <option value = 202 {{if eq .TypeAsInt 202}}selected{{end}}>Real</option>
+
+    </td><td>
+	<input type="text" value="{{ .Historian }}">
+    </td>
+</tr>
+{{ end }}
+</table>
 
 {{template "footer.html" . }}
