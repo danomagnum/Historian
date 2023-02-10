@@ -7,13 +7,15 @@ import (
 )
 
 type tmplHomeData struct {
-	Title string
+	Changes bool
+	Title   string
 }
 
 func api_Home(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob("./templates/*") // TODO: remove once page debug is done
 	dat := tmplHomeData{
-		Title: "Home",
+		Changes: changes,
+		Title:   "Home",
 	}
 	err := templates.ExecuteTemplate(w, "Home.html", dat)
 	if err != nil {

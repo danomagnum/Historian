@@ -7,15 +7,17 @@ import (
 )
 
 type tmplServerConfData struct {
-	Title string
-	Conf  ConfigGeneral
+	Changes bool
+	Title   string
+	Conf    ConfigGeneral
 }
 
 func api_ServerConf(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob("./templates/*") // TODO: remove once page debug is done
 	dat := tmplServerConfData{
-		Title: "ServerConf",
-		Conf:  workingConf.General,
+		Changes: changes,
+		Title:   "ServerConf",
+		Conf:    workingConf.General,
 	}
 	err := templates.ExecuteTemplate(w, "Server.html", dat)
 	if err != nil {

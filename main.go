@@ -8,6 +8,7 @@ import (
 
 var activeConf Config
 var workingConf Config
+var changes bool
 
 func main() {
 

@@ -14,6 +14,9 @@
             <li><a href="/Server">Server</a></li>
             <li><a href="/Providers">Data Providers</a></li>
             <li><a href="/Historians">Historians</a></li>
+            {{ if .Changes }}
+            Changes Pending
+            {{ end }}
         </ul>
         <ul>
             <li><a href="/login">Login</a></li>
