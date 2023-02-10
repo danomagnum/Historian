@@ -35,10 +35,15 @@ func api_EditCipClass3Conf(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Could not find '%s'", targetName)
 		return
 	}
+	editCipClass3Conf(*conf, w, r)
+}
+
+func editCipClass3Conf(conf ConfigCIPClass3, w http.ResponseWriter, r *http.Request) {
+
 	dat := tmplProviderClass3Data{
 		Changes: changes,
 		Title:   fmt.Sprintf("Editing CIP Class 3 Endpoint %s @ %s,%s", conf.Name, conf.Address, conf.Path),
-		Conf:    *conf,
+		Conf:    conf,
 	}
 	err := templates.ExecuteTemplate(w, "Provider_CIPClass3.html", dat)
 	if err != nil {
@@ -48,17 +53,12 @@ func api_EditCipClass3Conf(w http.ResponseWriter, r *http.Request) {
 
 func api_NewCipClass3Conf(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob("./templates/*") // TODO: remove once page debug is done
-	dat := tmplProviderClass3Data{
-		Changes: changes,
-		Title:   "New CIP Class 3 Endpoint",
-		Conf:    ConfigCIPClass3{},
-	}
-	err := templates.ExecuteTemplate(w, "Provider_CIPClass3.html", dat)
-	if err != nil {
-		log.Printf("problem with template. %v", err)
-	}
-
+	conf := ConfigCIPClass3{Name: "New_CIP_Class3_Endpoint"}
 	changes = true
+
+	workingConf.DataProviders.CIPClass3 = append(workingConf.DataProviders.CIPClass3, conf)
+
+	editCipClass3Conf(conf, w, r)
 }
 
 func api_EditCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
@@ -115,15 +115,7 @@ func api_EditCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
 	conf.Endpoints[index] = newendpoint
 	changes = true
 
-	dat := tmplProviderClass3Data{
-		Changes: changes,
-		Title:   fmt.Sprintf("Editing CIP Class 3 Endpoint %s @ %s,%s", conf.Name, conf.Address, conf.Path),
-		Conf:    *conf,
-	}
-	err = templates.ExecuteTemplate(w, "Provider_CIPClass3.html", dat)
-	if err != nil {
-		log.Printf("problem with template. %v", err)
-	}
+	editCipClass3Conf(*conf, w, r)
 
 }
 
@@ -139,6 +131,8 @@ func api_NewCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
 
 	changes = true
 	conf.Endpoints = append(conf.Endpoints, EndpointCIPClass3{})
+
+	editCipClass3Conf(*conf, w, r)
 
 }
 
