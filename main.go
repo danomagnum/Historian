@@ -12,6 +12,7 @@ var workingConf Config
 var changes bool
 
 var activeContext context.Context
+var activeContextCancel context.CancelFunc
 
 func main() {
 
@@ -37,7 +38,7 @@ func main() {
 		// this context will live until the config changes.
 		// eventually the cancel function here will be called by the web interface when
 		// the config changes to stop everything and we'll start over at that point.
-		activeContext, _ := context.WithCancel(context.Background())
+		activeContext, activeContextCancel = context.WithCancel(context.Background())
 
 		////////////////////////
 		// Init Historians

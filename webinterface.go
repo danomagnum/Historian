@@ -34,6 +34,7 @@ func WebAPIStart() {
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
 	router.HandleFunc("/GetWorking/", api_GetWorkingConf)
 	router.HandleFunc("/LoadWorking/", api_LoadWorkingConf)
+	router.HandleFunc("/ApplyWorking/", api_ApplyWorkingConf)
 	router.HandleFunc("/GetActive/", api_GetActiveConf)
 	router.HandleFunc("/Server/", api_ServerConf)
 	router.HandleFunc("/Providers/", api_ProidersConf)
@@ -74,5 +75,5 @@ func api_LoadWorkingConf(w http.ResponseWriter, r *http.Request) {
 }
 
 func api_ApplyWorkingConf(w http.ResponseWriter, r *http.Request) {
-
+	activeContextCancel()
 }
