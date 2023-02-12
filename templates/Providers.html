@@ -6,7 +6,7 @@
     <ol>
         <li>
 
-	        <a href="/Providers/CIPClass3/Edit/{{.Name}}">{{ .Name }}</a>
+	        <a href="/Providers/CIPClass3/{{.Name}}/Edit/">{{ .Name }}</a>
 	        {{ .Address  }}
             {{ .Path }}
             {{ .Enable }}
@@ -14,7 +14,7 @@
         </li>
     </ol>
     {{ end }}
-    <a href="/providers/CIPClass3/Add">New</a>
+    <a href="/providers/CIPClass3/Add/">New</a>
 </section>
 
 {{template "footer.html" . }}

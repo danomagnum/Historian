@@ -7,26 +7,51 @@ import (
 	"time"
 )
 
-var activeConf Config
-var workingConf Config
-var changes bool
+type SystemState int
 
-var activeContext context.Context
-var activeContextCancel context.CancelFunc
+const (
+	StateStartup SystemState = iota
+	StateRunning
+	StateRestarting
+)
+
+func (s SystemState) String() string {
+	switch s {
+	case StateStartup:
+		return "Starting Up"
+	case StateRunning:
+		return "Running"
+	case StateRestarting:
+		return "Restarting"
+	}
+	return "Unknown"
+}
+
+type System struct {
+	ActiveContext       context.Context
+	ActiveContextCancel context.CancelFunc
+	ActiveConfig        Config
+	WorkingConfig       Config
+	Changes             bool
+	State               SystemState
+}
+
+var system System
 
 func main() {
+	system.State = StateStartup
 
 	var err error
 	////////////////////////
 	// Load Config
 	////////////////////////
-	activeConf, err = ConfigLoad("cfg.json")
+	system.ActiveConfig, err = ConfigLoad("cfg.json")
 	if err != nil {
-		activeConf = ConfigNew()
+		system.ActiveConfig = ConfigNew()
 	}
-	workingConf = activeConf
+	system.WorkingConfig = system.ActiveConfig
 
-	server_addr := fmt.Sprintf("%s:%d", activeConf.General.Host, activeConf.General.Port)
+	server_addr := fmt.Sprintf("%s:%d", system.ActiveConfig.General.Host, system.ActiveConfig.General.Port)
 	log.Printf("Starting server at %s", server_addr)
 
 	WebAPIStart()
@@ -38,39 +63,44 @@ func main() {
 		// this context will live until the config changes.
 		// eventually the cancel function here will be called by the web interface when
 		// the config changes to stop everything and we'll start over at that point.
-		activeContext, activeContextCancel = context.WithCancel(context.Background())
+		system.ActiveContext, system.ActiveContextCancel = context.WithCancel(context.Background())
 
 		////////////////////////
 		// Init Historians
 		////////////////////////
 		Historians := make(map[string]Historian)
 
-		for i := range activeConf.Historians.Influx {
-			activeConf.Historians.Influx[i].Init(activeContext, Historians)
+		for i := range system.ActiveConfig.Historians.Influx {
+			system.ActiveConfig.Historians.Influx[i].Init(system.ActiveContext, Historians)
 		}
-		for i := range activeConf.Historians.JSON {
-			activeConf.Historians.JSON[i].Init(activeContext, Historians)
+		for i := range system.ActiveConfig.Historians.JSON {
+			system.ActiveConfig.Historians.JSON[i].Init(system.ActiveContext, Historians)
 		}
-		for i := range activeConf.Historians.Logging {
-			activeConf.Historians.Logging[i].Init(activeContext, Historians)
+		for i := range system.ActiveConfig.Historians.Logging {
+			system.ActiveConfig.Historians.Logging[i].Init(system.ActiveContext, Historians)
 		}
 
 		////////////////////////
 		// Init Data Providers
 		////////////////////////
-		for i := range activeConf.DataProviders.CIPClass3 {
-			activeConf.DataProviders.CIPClass3[i].Init(activeContext, Historians)
+		for i := range system.ActiveConfig.DataProviders.CIPClass3 {
+			system.ActiveConfig.DataProviders.CIPClass3[i].Init(system.ActiveContext, Historians)
 		}
+
+		system.State = StateRunning
 
 		////////////////////////
 		// Wait for config change
 		////////////////////////
-		<-activeContext.Done()
+		<-system.ActiveContext.Done()
+		system.State = StateRestarting
 
-		log.Printf("Active Context Complete. Restart Delay: %v.", activeConf.General.RestartDelay)
+		log.Printf("Active Context Complete. Restart Delay: %v.", system.ActiveConfig.General.RestartDelay)
 
 		// wait a bit before restarting.
-		time.Sleep(activeConf.General.RestartDelay)
+		time.Sleep(system.ActiveConfig.General.RestartDelay)
+		system.ActiveConfig = system.WorkingConfig
+		system.Changes = false
 		log.Printf("Restarting...")
 	}
 

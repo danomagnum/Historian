@@ -60,6 +60,7 @@ func (h *HistorianJSON) C() chan<- []HistorianData {
 }
 
 func (h *HistorianJSON) Run(ctx context.Context) {
+	defer h.Close()
 
 	for {
 		select {
@@ -68,6 +69,7 @@ func (h *HistorianJSON) Run(ctx context.Context) {
 				h.JsonEncoder.Encode(hd[i])
 			}
 		case <-ctx.Done():
+			return
 
 		}
 	}

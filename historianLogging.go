@@ -70,6 +70,7 @@ func (h *HistorianLogging) Run(ctx context.Context) {
 			h.DataCache = map[string][]historianLoggingDataEntry{}
 
 		case <-ctx.Done():
+			return
 		}
 	}
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const templatedir = ".templates/"
+const templatedir = "./templates/"
 
 //func init() {
 //mime.AddExtensionType(".css", "text/css")
@@ -35,19 +35,19 @@ func WebAPIStart() {
 	router.HandleFunc("/GetWorking/", api_GetWorkingConf)
 	router.HandleFunc("/LoadWorking/", api_LoadWorkingConf)
 	router.HandleFunc("/ApplyWorking/", api_ApplyWorkingConf)
-	router.HandleFunc("/GetActive/", api_GetActiveConf)
+	router.HandleFunc("/GetActive/", api_GetConfig)
 	router.HandleFunc("/Server/", api_ServerConf)
 	router.HandleFunc("/Providers/", api_ProidersConf)
 	//router.PathPrefix("/Providers/CIPClass3/").Handler(http.StripPrefix("/Providers/CIPClass3", webApiCIPClass3_Handler))
 	cipClass3Init(router.PathPrefix("/Providers/CIPClass3").Subrouter())
-	addr := fmt.Sprintf("%s:%d", activeConf.General.Host, activeConf.General.Port)
+	addr := fmt.Sprintf("%s:%d", system.ActiveConfig.General.Host, system.ActiveConfig.General.Port)
 	go http.ListenAndServe(addr, router)
 }
 
-func api_GetActiveConf(w http.ResponseWriter, r *http.Request) {
+func api_GetConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	writer := json.NewEncoder(w)
-	err := writer.Encode(activeConf)
+	err := writer.Encode(system.ActiveConfig)
 	if err != nil {
 		log.Printf("problem encoding active conf: %v", err)
 	}
@@ -56,7 +56,7 @@ func api_GetActiveConf(w http.ResponseWriter, r *http.Request) {
 func api_GetWorkingConf(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	writer := json.NewEncoder(w)
-	err := writer.Encode(workingConf)
+	err := writer.Encode(system.WorkingConfig)
 	if err != nil {
 		log.Printf("problem encoding working conf: %v", err)
 	}
@@ -65,15 +65,16 @@ func api_GetWorkingConf(w http.ResponseWriter, r *http.Request) {
 func api_LoadWorkingConf(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	reader := json.NewDecoder(r.Body)
-	err := reader.Decode(&workingConf)
+	err := reader.Decode(&system.WorkingConfig)
 	if err != nil {
 		log.Printf("problem decoding working conf: %v", err)
 		return
 	}
-	changes = true
+	system.Changes = true
 	api_Home(w, r)
 }
 
 func api_ApplyWorkingConf(w http.ResponseWriter, r *http.Request) {
-	activeContextCancel()
+	system.ActiveContextCancel()
+	api_Home(w, r)
 }

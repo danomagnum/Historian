@@ -15,8 +15,9 @@
             <li><a href="/Providers">Data Providers</a></li>
             <li><a href="/Historians">Historians</a></li>
             <li><a href="/GetActive">Active Config</a></li>
-            {{ if .Changes }}
+            {{ if .System.Changes }}
             <li><a href="/GetWorking">Working Config</a></li>
+            <li><a href="/ApplyWorking">Apply Working Config</a></li>
             {{ end }}
         </ul>
         <ul>

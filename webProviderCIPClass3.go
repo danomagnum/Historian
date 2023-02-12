@@ -14,9 +14,9 @@ import (
 )
 
 type tmplProviderClass3Data struct {
-	Changes bool
-	Title   string
-	Conf    ConfigCIPClass3
+	System System
+	Title  string
+	Conf   ConfigCIPClass3
 }
 
 func cipClass3Init(r *mux.Router) {
@@ -41,9 +41,9 @@ func api_EditCipClass3Conf(w http.ResponseWriter, r *http.Request) {
 func editCipClass3Conf(conf ConfigCIPClass3, w http.ResponseWriter, r *http.Request) {
 
 	dat := tmplProviderClass3Data{
-		Changes: changes,
-		Title:   fmt.Sprintf("Editing CIP Class 3 Endpoint %s @ %s,%s", conf.Name, conf.Address, conf.Path),
-		Conf:    conf,
+		System: system,
+		Title:  fmt.Sprintf("Editing CIP Class 3 Endpoint %s @ %s,%s", conf.Name, conf.Address, conf.Path),
+		Conf:   conf,
 	}
 	err := templates.ExecuteTemplate(w, "Provider_CIPClass3.html", dat)
 	if err != nil {
@@ -54,9 +54,9 @@ func editCipClass3Conf(conf ConfigCIPClass3, w http.ResponseWriter, r *http.Requ
 func api_NewCipClass3Conf(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	conf := ConfigCIPClass3{Name: "New_CIP_Class3_Endpoint"}
-	changes = true
+	system.Changes = true
 
-	workingConf.DataProviders.CIPClass3 = append(workingConf.DataProviders.CIPClass3, conf)
+	system.WorkingConfig.DataProviders.CIPClass3 = append(system.WorkingConfig.DataProviders.CIPClass3, conf)
 
 	editCipClass3Conf(conf, w, r)
 }
@@ -114,7 +114,7 @@ func api_EditCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
 	newendpoint.Rate = rate
 	newendpoint.TagType = gologix.CIPType(ciptype)
 	conf.Endpoints[index] = newendpoint
-	changes = true
+	system.Changes = true
 
 	editCipClass3Conf(*conf, w, r)
 
@@ -131,7 +131,7 @@ func api_NewCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	changes = true
+	system.Changes = true
 	conf.Endpoints = append(conf.Endpoints, EndpointCIPClass3{})
 
 	editCipClass3Conf(*conf, w, r)
@@ -139,9 +139,9 @@ func api_NewCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func findClass3Endpoint(name string) (*ConfigCIPClass3, bool) {
-	for i := range workingConf.DataProviders.CIPClass3 {
-		if workingConf.DataProviders.CIPClass3[i].Name == name {
-			return &workingConf.DataProviders.CIPClass3[i], true
+	for i := range system.WorkingConfig.DataProviders.CIPClass3 {
+		if system.WorkingConfig.DataProviders.CIPClass3[i].Name == name {
+			return &system.WorkingConfig.DataProviders.CIPClass3[i], true
 		}
 	}
 
