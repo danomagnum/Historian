@@ -12,7 +12,7 @@ type tmplHomeData struct {
 }
 
 func api_Home(w http.ResponseWriter, r *http.Request) {
-	templates, _ = template.ParseGlob("./templates/*") // TODO: remove once page debug is done
+	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	dat := tmplHomeData{
 		Changes: changes,
 		Title:   "Home",

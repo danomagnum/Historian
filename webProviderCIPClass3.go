@@ -27,7 +27,7 @@ func cipClass3Init(r *mux.Router) {
 }
 
 func api_EditCipClass3Conf(w http.ResponseWriter, r *http.Request) {
-	templates, _ = template.ParseGlob("./templates/*") // TODO: remove once page debug is done
+	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	vars := mux.Vars(r)
 	targetName := vars["name"]
 	conf, ok := findClass3Endpoint(targetName)
@@ -52,7 +52,7 @@ func editCipClass3Conf(conf ConfigCIPClass3, w http.ResponseWriter, r *http.Requ
 }
 
 func api_NewCipClass3Conf(w http.ResponseWriter, r *http.Request) {
-	templates, _ = template.ParseGlob("./templates/*") // TODO: remove once page debug is done
+	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	conf := ConfigCIPClass3{Name: "New_CIP_Class3_Endpoint"}
 	changes = true
 
@@ -62,7 +62,7 @@ func api_NewCipClass3Conf(w http.ResponseWriter, r *http.Request) {
 }
 
 func api_EditCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
-	templates, _ = template.ParseGlob("./templates/*") // TODO: remove once page debug is done
+	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	vars := mux.Vars(r)
 	targetName := vars["name"]
 	conf, ok := findClass3Endpoint(targetName)
@@ -121,7 +121,7 @@ func api_EditCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func api_NewCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
-	templates, _ = template.ParseGlob("./templates/*") // TODO: remove once page debug is done
+	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	vars := mux.Vars(r)
 	targetName := vars["name"]
 	conf, ok := findClass3Endpoint(targetName)

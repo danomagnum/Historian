@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const templatedir = "templates/"
+const templatedir = ".templates/"
 
 //func init() {
 //mime.AddExtensionType(".css", "text/css")
@@ -22,7 +22,7 @@ var templates *template.Template
 
 func WebAPIStart() {
 	var err error
-	templates, err = template.ParseGlob("./templates/*")
+	templates, err = template.ParseGlob(templatedir + "*")
 	if err != nil {
 		log.Println("Cannot parse templates:", err)
 		os.Exit(-1)

@@ -13,7 +13,7 @@ type tmplProvidersData struct {
 }
 
 func api_ProidersConf(w http.ResponseWriter, r *http.Request) {
-	templates, _ = template.ParseGlob("./templates/*") // TODO: remove once page debug is done
+	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	dat := tmplProvidersData{
 		Changes: changes,
 		Title:   "ServerConf",
