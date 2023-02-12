@@ -63,6 +63,7 @@ type HistorianInflux struct {
 }
 
 func (h *HistorianInflux) Close() {
+	log.Printf("Closing Influx Historian %s", h.Name)
 }
 
 func (h *HistorianInflux) C() chan<- []HistorianData {
@@ -70,6 +71,7 @@ func (h *HistorianInflux) C() chan<- []HistorianData {
 }
 
 func (h *HistorianInflux) Run(ctx context.Context) {
+	defer h.Close()
 
 	for {
 		select {

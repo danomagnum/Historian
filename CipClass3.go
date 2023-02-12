@@ -101,6 +101,7 @@ func (config *ConfigCIPClass3) PollGroup(ctx context.Context, client *gologix.Cl
 				}
 			}
 		case <-ctx.Done():
+			log.Printf("Closing %s Rate %v.", config.Name, rate)
 			return
 		}
 	}

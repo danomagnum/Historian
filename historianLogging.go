@@ -42,6 +42,7 @@ type HistorianLogging struct {
 }
 
 func (h *HistorianLogging) Close() {
+	log.Printf("Closign Logging Historian %s", h.Name)
 }
 
 func (h *HistorianLogging) C() chan<- []HistorianData {
@@ -49,6 +50,7 @@ func (h *HistorianLogging) C() chan<- []HistorianData {
 }
 
 func (h *HistorianLogging) Run(ctx context.Context) {
+	defer h.Close()
 
 	t := time.NewTicker(h.Timeout)
 	for {

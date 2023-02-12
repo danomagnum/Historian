@@ -52,6 +52,7 @@ type HistorianJSON struct {
 }
 
 func (h *HistorianJSON) Close() {
+	log.Printf("Closing JSON Historian%s", h.Name)
 	h.File.Close()
 }
 
