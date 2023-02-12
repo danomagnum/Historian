@@ -1,7 +1,8 @@
 {
 	"General": {
 		"Host": "localhost",
-		"Port": 8000
+		"Port": 8000,
+		"RestartDelay": 1000000000
 	},
 	"DataProviders": {
 		"CIPClass3": [

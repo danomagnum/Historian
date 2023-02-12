@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 )
 
 type Config struct {
@@ -63,6 +64,7 @@ func ConfigLoad(filename string) (Config, error) {
 }
 
 type ConfigGeneral struct {
-	Host string
-	Port int
+	Host         string
+	Port         int
+	RestartDelay time.Duration
 }

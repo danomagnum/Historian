@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/danomagnum/gologix"
+	"github.com/gorilla/mux"
 )
 
 type tmplProviderClass3Data struct {
@@ -18,18 +19,17 @@ type tmplProviderClass3Data struct {
 	Conf    ConfigCIPClass3
 }
 
-var webApiCIPClass3_Handler = http.NewServeMux()
-
-func init() {
-	webApiCIPClass3_Handler.HandleFunc("/Edit/", api_EditCipClass3Conf)
-	webApiCIPClass3_Handler.HandleFunc("/EditEndpoint/", api_EditCipClass3Endpoint)
-	webApiCIPClass3_Handler.HandleFunc("/NewEndpoint/", api_NewCipClass3Endpoint)
-	webApiCIPClass3_Handler.HandleFunc("/Add/", api_NewCipClass3Conf)
+func cipClass3Init(r *mux.Router) {
+	r.HandleFunc("/{name}/Edit/", api_EditCipClass3Conf)
+	r.HandleFunc("/{name}/EditEndpoint/", api_EditCipClass3Endpoint)
+	r.HandleFunc("/{name}/NewEndpoint/", api_NewCipClass3Endpoint)
+	r.HandleFunc("/Add/", api_NewCipClass3Conf)
 }
 
 func api_EditCipClass3Conf(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob("./templates/*") // TODO: remove once page debug is done
-	targetName := strings.TrimPrefix(r.URL.Path, "/Edit/")
+	vars := mux.Vars(r)
+	targetName := vars["name"]
 	conf, ok := findClass3Endpoint(targetName)
 	if !ok {
 		log.Printf("Could not find '%s'", targetName)
@@ -63,7 +63,8 @@ func api_NewCipClass3Conf(w http.ResponseWriter, r *http.Request) {
 
 func api_EditCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob("./templates/*") // TODO: remove once page debug is done
-	targetName := strings.TrimPrefix(r.URL.Path, "/EditEndpoint/")
+	vars := mux.Vars(r)
+	targetName := vars["name"]
 	conf, ok := findClass3Endpoint(targetName)
 	log.Printf("Editing Endpoint %s", r.URL)
 	if !ok {
@@ -121,7 +122,8 @@ func api_EditCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
 
 func api_NewCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob("./templates/*") // TODO: remove once page debug is done
-	targetName := strings.TrimPrefix(r.URL.Path, "/NewEndpoint/")
+	vars := mux.Vars(r)
+	targetName := vars["name"]
 	conf, ok := findClass3Endpoint(targetName)
 	log.Printf("Editing Endpoint %s", r.URL)
 	if !ok {

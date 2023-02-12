@@ -8,6 +8,8 @@ import (
 	"os"
 
 	"html/template"
+
+	"github.com/gorilla/mux"
 )
 
 const templatedir = "templates/"
@@ -25,19 +27,20 @@ func WebAPIStart() {
 		log.Println("Cannot parse templates:", err)
 		os.Exit(-1)
 	}
-	mux := http.NewServeMux()
+	//router := http.NewServeMux()
+	router := mux.NewRouter()
 	fs := http.FileServer(http.Dir("./static"))
-	mux.HandleFunc("/", api_Home)
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))
-	mux.HandleFunc("/GetWorking/", api_GetWorkingConf)
-	mux.HandleFunc("/LoadWorking/", api_LoadWorkingConf)
-	mux.HandleFunc("/GetActive/", api_GetActiveConf)
-	mux.HandleFunc("/Server/", api_ServerConf)
-	mux.HandleFunc("/Providers/", api_ProidersConf)
-	mux.Handle("/Providers/CIPClass3/", http.StripPrefix("/Providers/CIPClass3", webApiCIPClass3_Handler))
+	router.HandleFunc("/", api_Home)
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
+	router.HandleFunc("/GetWorking/", api_GetWorkingConf)
+	router.HandleFunc("/LoadWorking/", api_LoadWorkingConf)
+	router.HandleFunc("/GetActive/", api_GetActiveConf)
+	router.HandleFunc("/Server/", api_ServerConf)
+	router.HandleFunc("/Providers/", api_ProidersConf)
+	//router.PathPrefix("/Providers/CIPClass3/").Handler(http.StripPrefix("/Providers/CIPClass3", webApiCIPClass3_Handler))
+	cipClass3Init(router.PathPrefix("/Providers/CIPClass3").Subrouter())
 	addr := fmt.Sprintf("%s:%d", activeConf.General.Host, activeConf.General.Port)
-	go http.ListenAndServe(addr, mux)
-
+	go http.ListenAndServe(addr, router)
 }
 
 func api_GetActiveConf(w http.ResponseWriter, r *http.Request) {
@@ -68,4 +71,8 @@ func api_LoadWorkingConf(w http.ResponseWriter, r *http.Request) {
 	}
 	changes = true
 	api_Home(w, r)
+}
+
+func api_ApplyWorkingConf(w http.ResponseWriter, r *http.Request) {
+
 }
