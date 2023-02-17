@@ -42,7 +42,7 @@ func editCipClass3Conf(conf ConfigCIPClass3, w http.ResponseWriter, r *http.Requ
 
 	dat := tmplProviderClass3Data{
 		System: system,
-		Title:  fmt.Sprintf("Editing CIP Class 3 Endpoint %s @ %s,%s", conf.Name, conf.Address, conf.Path),
+		Title:  fmt.Sprintf("Editing CIP Class 3 Endpoint %s @ %s,%s", conf.Name(), conf.Address, conf.Path),
 		Conf:   conf,
 	}
 	err := templates.ExecuteTemplate(w, "Provider_CIPClass3.html", dat)
@@ -53,7 +53,7 @@ func editCipClass3Conf(conf ConfigCIPClass3, w http.ResponseWriter, r *http.Requ
 
 func api_NewCipClass3Conf(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
-	conf := ConfigCIPClass3{Name: "New_CIP_Class3_Endpoint"}
+	conf := ConfigCIPClass3{PLCName: "New_CIP_Class3_Endpoint"}
 	system.Changes = true
 
 	system.WorkingConfig.DataProviders.CIPClass3 = append(system.WorkingConfig.DataProviders.CIPClass3, conf)
@@ -84,8 +84,8 @@ func api_EditCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("invalid endpoint %s not an int: %v", index_str, err)
 		return
-	} else if index < 0 || index >= len(conf.Endpoints) {
-		log.Printf("invalid endpoint %d.  must be 0.. %d", index, len(conf.Endpoints))
+	} else if index < 0 || index >= len(conf.EndpointList) {
+		log.Printf("invalid endpoint %d.  must be 0.. %d", index, len(conf.EndpointList))
 		return
 	}
 
@@ -107,13 +107,13 @@ func api_EditCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// load data into that item.
-	newendpoint := conf.Endpoints[index]
+	newendpoint := conf.EndpointList[index]
 	newendpoint.Historian = r.FormValue("Historian")
 	newendpoint.Name = r.FormValue("Name")
 	newendpoint.TagName = r.FormValue("TagName")
 	newendpoint.Rate = rate
 	newendpoint.TagType = gologix.CIPType(ciptype)
-	conf.Endpoints[index] = newendpoint
+	conf.EndpointList[index] = newendpoint
 	system.Changes = true
 
 	editCipClass3Conf(*conf, w, r)
@@ -132,7 +132,7 @@ func api_NewCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	system.Changes = true
-	conf.Endpoints = append(conf.Endpoints, EndpointCIPClass3{})
+	conf.EndpointList = append(conf.EndpointList, EndpointCIPClass3{})
 
 	editCipClass3Conf(*conf, w, r)
 
@@ -140,7 +140,7 @@ func api_NewCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
 
 func findClass3Endpoint(name string) (*ConfigCIPClass3, bool) {
 	for i := range system.WorkingConfig.DataProviders.CIPClass3 {
-		if system.WorkingConfig.DataProviders.CIPClass3[i].Name == name {
+		if system.WorkingConfig.DataProviders.CIPClass3[i].PLCName == name {
 			return &system.WorkingConfig.DataProviders.CIPClass3[i], true
 		}
 	}

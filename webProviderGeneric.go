@@ -5,43 +5,45 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
-	"strings"
-	"time"
 
-	"github.com/danomagnum/gologix"
 	"github.com/gorilla/mux"
 )
 
 type DataProvider interface {
 	Name() string
-	Config() any
-	SetConfig(any)
+	String() string
+	Update(url.Values) error
+	Endpoints() []any
+	NewEndpoint()
+	UpdateEndpoint(url.Values) error
+	RemoveEndpoint(int)
 }
 
-type apiGenericConfig[T any] struct {
+type ApiGenericConfig[T DataProvider] struct {
 	ConfTypeName string
 	Confs        []T
 }
 
-type tmplProviderGenericData[T any] struct {
+type tmplProviderGenericData struct {
 	System System
 	Title  string
-	Conf   T
+	Conf   DataProvider
 }
 
-func (gc apiGenericConfig[T]) Init(r *mux.Router) {
+func (gc ApiGenericConfig[T]) Init(r *mux.Router) {
 	r.HandleFunc("/{name}/Edit/", gc.api_EditConf)
 	r.HandleFunc("/{name}/EditEndpoint/", gc.api_EditEndpoint)
 	r.HandleFunc("/{name}/NewEndpoint/", gc.api_NewEndpoint)
 	r.HandleFunc("/Add/", gc.api_NewConf)
 }
 
-func (gc apiGenericConfig[T]) api_EditConf(w http.ResponseWriter, r *http.Request) {
+func (gc ApiGenericConfig[T]) api_EditConf(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	vars := mux.Vars(r)
 	targetName := vars["name"]
-	conf, ok := gc.findEndpoint(targetName)
+	conf, ok := gc.findConfByName(targetName)
 	if !ok {
 		log.Printf("Could not find '%s'", targetName)
 		return
@@ -49,9 +51,9 @@ func (gc apiGenericConfig[T]) api_EditConf(w http.ResponseWriter, r *http.Reques
 	gc.editConf(*conf, w, r)
 }
 
-func (gc apiGenericConfig[T]) editConf(conf T, w http.ResponseWriter, r *http.Request) {
+func (gc ApiGenericConfig[T]) editConf(conf DataProvider, w http.ResponseWriter, r *http.Request) {
 
-	dat := tmplProviderGenericData[T]{
+	dat := tmplProviderGenericData{
 		System: system,
 		Title:  fmt.Sprintf("Editing %s", gc.ConfTypeName),
 		Conf:   conf,
@@ -62,7 +64,7 @@ func (gc apiGenericConfig[T]) editConf(conf T, w http.ResponseWriter, r *http.Re
 	}
 }
 
-func (gc apiGenericConfig[T]) api_NewConf(w http.ResponseWriter, r *http.Request) {
+func (gc ApiGenericConfig[T]) api_NewConf(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	var conf T
 	system.Changes = true
@@ -72,11 +74,11 @@ func (gc apiGenericConfig[T]) api_NewConf(w http.ResponseWriter, r *http.Request
 	gc.editConf(conf, w, r)
 }
 
-func (gc apiGenericConfig[T]) api_EditEndpoint(w http.ResponseWriter, r *http.Request) {
+func (gc ApiGenericConfig[T]) api_EditEndpoint(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	vars := mux.Vars(r)
 	targetName := vars["name"]
-	conf, ok := gc.findEndpoint(targetName)
+	conf, ok := gc.findConfByName(targetName)
 	log.Printf("Editing Endpoint %s", r.URL)
 	if !ok {
 		log.Printf("Could not find '%s'", targetName)
@@ -89,53 +91,35 @@ func (gc apiGenericConfig[T]) api_EditEndpoint(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	c := *conf
+	endpoints := c.Endpoints()
+
 	// see what we're editing.
 	index_str := r.FormValue("Index")
 	index, err := strconv.Atoi(index_str)
 	if err != nil {
 		log.Printf("invalid endpoint %s not an int: %v", index_str, err)
 		return
-	} else if index < 0 || index >= len(conf.Endpoints) {
-		log.Printf("invalid endpoint %d.  must be 0.. %d", index, len(conf.Endpoints))
+	} else if index < 0 || index >= len(endpoints) {
+		log.Printf("invalid endpoint %d.  must be 0.. %d", index, len(endpoints))
 		return
 	}
 
-	// validate the rate
-	rate_str := r.FormValue("Rate")
-	rate_str = strings.ReplaceAll(rate_str, " ", "") // get rid of spaces for parsing
-	rate, err := time.ParseDuration(rate_str)
+	err = c.UpdateEndpoint(r.Form)
 	if err != nil {
-		log.Printf("invalid rete %s: %v", rate_str, err)
+		log.Printf("Could not update endpoint '%s': %v", targetName, err)
 		return
 	}
-
-	// validate the type
-	ciptype_str := r.FormValue("Type")
-	ciptype, err := strconv.Atoi(ciptype_str)
-	if err != nil {
-		log.Printf("invalid type %s. not an int: %v", ciptype_str, err)
-		return
-	}
-
-	// load data into that item.
-	newendpoint := conf.Endpoints[index]
-	newendpoint.Historian = r.FormValue("Historian")
-	newendpoint.Name = r.FormValue("Name")
-	newendpoint.TagName = r.FormValue("TagName")
-	newendpoint.Rate = rate
-	newendpoint.TagType = gologix.CIPType(ciptype)
-	conf.Endpoints[index] = newendpoint
-	system.Changes = true
 
 	gc.editConf(*conf, w, r)
 
 }
 
-func (gc apiGenericConfig[T]) api_NewEndpoint(w http.ResponseWriter, r *http.Request) {
+func (gc ApiGenericConfig[T]) api_NewEndpoint(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	vars := mux.Vars(r)
 	targetName := vars["name"]
-	conf, ok := gc.findEndpoint(targetName)
+	conf, ok := gc.findConfByName(targetName)
 	log.Printf("Editing Endpoint %s", r.URL)
 	if !ok {
 		log.Printf("Could not find '%s'", targetName)
@@ -143,15 +127,16 @@ func (gc apiGenericConfig[T]) api_NewEndpoint(w http.ResponseWriter, r *http.Req
 	}
 
 	system.Changes = true
-	conf.Endpoints = append(conf.Endpoints, EndpointGeneric{})
+	c := *conf
+	c.NewEndpoint()
 
 	gc.editConf(*conf, w, r)
 
 }
 
-func (gc apiGenericConfig[T]) findEndpoint(name string) (*T, bool) {
-	for i := range system.WorkingConfig.DataProviders.CIPClass3 {
-		if system.WorkingConfig.DataProviders.CIPClass3[i].Name == name {
+func (gc ApiGenericConfig[T]) findConfByName(name string) (*T, bool) {
+	for i := range gc.Confs {
+		if gc.Confs[i].Name() == name {
 			return &gc.Confs[i], true
 		}
 	}

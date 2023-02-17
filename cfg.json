@@ -7,12 +7,12 @@
 	"DataProviders": {
 		"CIPClass3": [
 			{
-				"Name": "GaragePLC",
+				"PLCName": "GaragePLC",
 				"Address": "192.168.2.241",
 				"Path": "1,0",
 				"Enable": true,
 				"DefaultRate": 1000000000,
-				"Endpoints": [
+				"EndpointList": [
 					{
 						"Name": "ShedTemp",
 						"TagName": "Program:Shed.Temp1",

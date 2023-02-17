@@ -4,18 +4,21 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/danomagnum/gologix"
 )
 
 type ConfigCIPClass3 struct {
-	Name        string
-	Address     string // IP Address
-	Path        string // CIP Path (ex: "1,0" for slot 0 on the backplane)
-	Enable      bool
-	DefaultRate time.Duration
-	Endpoints   []EndpointCIPClass3
+	PLCName      string
+	Address      string // IP Address
+	Path         string // CIP Path (ex: "1,0" for slot 0 on the backplane)
+	Enable       bool
+	DefaultRate  time.Duration
+	EndpointList []EndpointCIPClass3
 }
 
 func (config *ConfigCIPClass3) Init(ctx context.Context, h map[string]Historian) {
@@ -27,20 +30,20 @@ func (config *ConfigCIPClass3) Run(ctx context.Context, h map[string]Historian) 
 	client := gologix.NewClient(config.Address)
 	client.Path, err = gologix.ParsePath(config.Path)
 	if err != nil {
-		log.Printf("problem starting CipClass3 Client %s: %v", config.Name, err)
+		log.Printf("problem starting CipClass3 Client %s: %v", config.PLCName, err)
 		return
 	}
 
 	// split the endpoints up by poll rate
 	poll_groups := make(map[time.Duration][]EndpointCIPClass3)
-	for i := range config.Endpoints {
-		rate := config.Endpoints[i].Rate
+	for i := range config.EndpointList {
+		rate := config.EndpointList[i].Rate
 		group, ok := poll_groups[rate]
 		if !ok {
 			poll_groups[rate] = make([]EndpointCIPClass3, 0)
 			group = poll_groups[rate]
 		}
-		group = append(group, config.Endpoints[i])
+		group = append(group, config.EndpointList[i])
 		poll_groups[rate] = group
 	}
 
@@ -48,7 +51,7 @@ func (config *ConfigCIPClass3) Run(ctx context.Context, h map[string]Historian) 
 	if config.Enable {
 		err = client.Connect()
 		if err != nil {
-			log.Printf("could not connect to %s: %v", config.Name, err)
+			log.Printf("could not connect to %s: %v", config.PLCName, err)
 			return
 		}
 	}
@@ -56,14 +59,14 @@ func (config *ConfigCIPClass3) Run(ctx context.Context, h map[string]Historian) 
 	subctx, cancel_func := context.WithCancel(ctx)
 	// Wait for poll groups
 	for k := range poll_groups {
-		log.Printf("CIPClass3 %s Rate %v has %d endpoints", config.Name, k, len(poll_groups[k]))
+		log.Printf("CIPClass3 %s Rate %v has %d endpoints", config.PLCName, k, len(poll_groups[k]))
 		go config.PollGroup(subctx, client, k, poll_groups[k], h)
 	}
 	<-ctx.Done()
 	cancel_func()
 	err = client.Disconnect()
 	if err != nil {
-		log.Printf("problem disconnecting from %s: %v", config.Name, err)
+		log.Printf("problem disconnecting from %s: %v", config.PLCName, err)
 	}
 
 }
@@ -86,14 +89,14 @@ func (config *ConfigCIPClass3) PollGroup(ctx context.Context, client *gologix.Cl
 			ts := time.Now()
 			values, err := client.ReadList(tags, types)
 			if err != nil {
-				log.Printf("problem reading %s at %v: %v", config.Name, rate, err)
+				log.Printf("problem reading %s at %v: %v", config.PLCName, rate, err)
 				continue
 			}
 			for i := range values {
 				endpoints[i].Value = values[i]
 				hd[i] = HistorianData{
 					Timestamp: ts,
-					Name:      fmt.Sprintf("%s.%s", config.Name, endpoints[i].TagName),
+					Name:      fmt.Sprintf("%s.%s", config.PLCName, endpoints[i].TagName),
 					Value:     values[i],
 				}
 				if endpoints[i].Historian != "" {
@@ -101,7 +104,7 @@ func (config *ConfigCIPClass3) PollGroup(ctx context.Context, client *gologix.Cl
 				}
 			}
 		case <-ctx.Done():
-			log.Printf("Closing %s Rate %v.", config.Name, rate)
+			log.Printf("Closing %s Rate %v.", config.PLCName, rate)
 			return
 		}
 	}
@@ -118,4 +121,67 @@ type EndpointCIPClass3 struct {
 
 func (e EndpointCIPClass3) TypeAsInt() int {
 	return int(e.TagType)
+}
+
+func (e ConfigCIPClass3) Name() string {
+	return e.PLCName
+}
+func (e ConfigCIPClass3) String() string {
+	return e.Name()
+}
+func (e *ConfigCIPClass3) Update(url.Values) error {
+	return nil
+
+}
+func (e ConfigCIPClass3) Endpoints() []any {
+	eps := make([]any, len(e.EndpointList))
+	for i, ep := range e.EndpointList {
+		eps[i] = ep
+	}
+	return eps
+}
+func (e *ConfigCIPClass3) NewEndpoint() {
+	e.EndpointList = append(e.EndpointList, EndpointCIPClass3{Name: "New Endpoint"})
+
+}
+func (e *ConfigCIPClass3) UpdateEndpoint(form url.Values) error {
+
+	// see what we're editing.
+	index_str := form.Get("Index")
+	index, err := strconv.Atoi(index_str)
+	if err != nil {
+		return fmt.Errorf("invalid endpoint %s not an int: %w", index_str, err)
+	} else if index < 0 || index >= len(e.EndpointList) {
+		return fmt.Errorf("invalid endpoint %d.  must be 0.. %d", index, len(e.EndpointList))
+	}
+
+	// validate the rate
+	rate_str := form.Get("Rate")
+	rate_str = strings.ReplaceAll(rate_str, " ", "") // get rid of spaces for parsing
+	rate, err := time.ParseDuration(rate_str)
+	if err != nil {
+		return fmt.Errorf("invalid rete %s: %w", rate_str, err)
+	}
+
+	// validate the type
+	ciptype_str := form.Get("Type")
+	ciptype, err := strconv.Atoi(ciptype_str)
+	if err != nil {
+		return fmt.Errorf("invalid type %s. not an int: %w", ciptype_str, err)
+	}
+
+	// load data into that item.
+	newendpoint := e.EndpointList[index]
+	newendpoint.Historian = form.Get("Historian")
+	newendpoint.Name = form.Get("Name")
+	newendpoint.TagName = form.Get("TagName")
+	newendpoint.Rate = rate
+	newendpoint.TagType = gologix.CIPType(ciptype)
+	e.EndpointList[index] = newendpoint
+	system.Changes = true
+	return nil
+
+}
+func (e *ConfigCIPClass3) RemoveEndpoint(int) {
+
 }
