@@ -13,16 +13,17 @@
 
 <table>
     <tr><thead>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Tag</th>
-        <th>Rate</th>
-        <th>Type</th>
-        <th>Historian</th>
-        <th>Actions</th>
+        <th><div style="resize: horizontal; overflow:auto;">ID</div></th>
+        <th><div style="resize: horizontal; overflow:auto;">Name</div></th>
+        <th><div style="resize: horizontal; overflow:auto;">Tag</div></th>
+        <th><div style="resize: horizontal; overflow:auto;">Rate</div></th>
+        <th><div style="resize: horizontal; overflow:auto;">Type</div></th>
+        <th><div style="resize: horizontal; overflow:auto;">Historian</div></th>
+        <th><div style="resize: horizontal; overflow:auto;">Actions</div></th>
     </thead></tr>
+    <tbody>
 {{ range $i, $e := .Conf.Endpoints }}
-<tr>
+    <tr>
     <td>
         {{$i}}
         <input type="hidden" value="{{$i}}" name="Index" form="Endpoint_{{$i}}">
@@ -55,6 +56,7 @@
     </td>
 </tr>
 {{ end }}
+</tbody>
 <tr>
     <td>
         <input type="hidden" value="-1" name="Index" form="Endpoint_-1">
