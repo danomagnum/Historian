@@ -41,6 +41,10 @@ func WebAPIStart() {
 	router.HandleFunc("/Historians/", api_HistoriansConf)
 	//router.PathPrefix("/Providers/CIPClass3/").Handler(http.StripPrefix("/Providers/CIPClass3", webApiCIPClass3_Handler))
 	cipClass3Init(router.PathPrefix("/Providers/CIPClass3").Subrouter())
+
+	cipClass3Router := ApiGenericConfig[*ConfigCIPClass3]{ConfTypeName: "CIP Class 3", Confs: system.WorkingConfig.DataProviders.CIPClass3}
+	cipClass3Router.Init(router.PathPrefix("/Providers2/CIPClass3").Subrouter())
+
 	addr := fmt.Sprintf("%s:%d", system.ActiveConfig.General.Host, system.ActiveConfig.General.Port)
 	go http.ListenAndServe(addr, router)
 }

@@ -75,8 +75,8 @@
 {{/* now we set up all the forms for the table rows.  We have to set them up here instead
     of in the table because of course HTML won't let you do that. */}}
 {{ range $i, $e := .Conf.Endpoints }}
-        <form id="Endpoint_{{$i}}" action="/Providers/CIPClass3/EditEndpoint/{{$name}}" method="POST" hidden="true"></form>
+        <form id="Endpoint_{{$i}}" action="/Providers/CIPClass3/{{$name}}/EditEndpoint/" method="POST" hidden="true"></form>
 {{ end }}
-        <form id="Endpoint_-1"     action="/Providers/CIPClass3/NewEndpoint/{{$name}}" method="POST" hidden="true"></form>
+        <form id="Endpoint_-1"     action="/Providers/CIPClass3/{{$name}}/NewEndpoint/" method="POST" hidden="true"></form>
 
 {{template "footer.html" . }}

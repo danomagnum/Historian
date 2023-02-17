@@ -14,7 +14,7 @@ type Config struct {
 }
 
 type ConfigDataProviders struct {
-	CIPClass3 []ConfigCIPClass3
+	CIPClass3 []*ConfigCIPClass3
 }
 
 type ConfigHistorians struct {
@@ -43,7 +43,7 @@ func (c *Config) Save(filename string) error {
 
 func ConfigNew() Config {
 	c := Config{}
-	c.DataProviders.CIPClass3 = make([]ConfigCIPClass3, 0)
+	c.DataProviders.CIPClass3 = make([]*ConfigCIPClass3, 0)
 	return c
 }
 

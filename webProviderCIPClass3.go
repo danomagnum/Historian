@@ -56,7 +56,7 @@ func api_NewCipClass3Conf(w http.ResponseWriter, r *http.Request) {
 	conf := ConfigCIPClass3{PLCName: "New_CIP_Class3_Endpoint"}
 	system.Changes = true
 
-	system.WorkingConfig.DataProviders.CIPClass3 = append(system.WorkingConfig.DataProviders.CIPClass3, conf)
+	system.WorkingConfig.DataProviders.CIPClass3 = append(system.WorkingConfig.DataProviders.CIPClass3, &conf)
 
 	editCipClass3Conf(conf, w, r)
 }
@@ -141,7 +141,7 @@ func api_NewCipClass3Endpoint(w http.ResponseWriter, r *http.Request) {
 func findClass3Endpoint(name string) (*ConfigCIPClass3, bool) {
 	for i := range system.WorkingConfig.DataProviders.CIPClass3 {
 		if system.WorkingConfig.DataProviders.CIPClass3[i].PLCName == name {
-			return &system.WorkingConfig.DataProviders.CIPClass3[i], true
+			return system.WorkingConfig.DataProviders.CIPClass3[i], true
 		}
 	}
 
