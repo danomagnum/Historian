@@ -84,7 +84,7 @@
 	"Historians": {
 		"Influx": [
 			{
-				"Name": "Weather",
+				"HistorianName": "Weather",
 				"Server": "http://historian.home:8086",
 				"Token": "76GIWIAF7BF7zcQQFDRLsd0t2uplZheI1_6yHq3T8-8y01PUwynCdG11qVzUjo8OiplWdllFUS2D35sjiC8JYA==",
 				"Org": "home",

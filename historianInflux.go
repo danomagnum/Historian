@@ -1,38 +1,42 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"html/template"
 	"log"
+	"net/url"
 
+	"github.com/gorilla/schema"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 )
 
 type ConfigHistorianInflux struct {
-	Name   string
-	Server string
-	Token  string
-	Org    string
-	Bucket string
+	HistorianName string
+	Server        string
+	Token         string
+	Org           string
+	Bucket        string
 }
 
 func (conf ConfigHistorianInflux) Init(ctx context.Context, histmap map[string]Historian) {
-	if conf.Name == "" {
+	if conf.HistorianName == "" {
 		log.Print("Influx Historian missing a name.")
 		return
 	}
 	h, err := NewHistorianInflux(
-		conf.Name,
+		conf.HistorianName,
 		conf.Server, // server
 		conf.Token,  // token
 		conf.Org,    // organization
 		conf.Bucket, // bucket
 	)
 	if err != nil {
-		log.Printf("Failure to load historian %s: %v", conf.Name, err)
+		log.Printf("Failure to load historian %s: %v", conf.HistorianName, err)
 		return
 	}
-	histmap[conf.Name] = h
+	histmap[conf.HistorianName] = h
 	go h.Run(ctx)
 }
 
@@ -87,4 +91,46 @@ func (h *HistorianInflux) Run(ctx context.Context) {
 			return
 		}
 	}
+}
+
+func (h *ConfigHistorianInflux) RenderConfig() template.HTML {
+	encoder := schema.NewEncoder()
+
+	form := make(map[string][]string)
+	err := encoder.Encode(h, form)
+	if err != nil {
+		return ""
+	}
+
+	form2 := make(map[string]string)
+	for k := range form {
+		form2[k] = form[k][0]
+	}
+
+	w := new(bytes.Buffer)
+	err = templates.ExecuteTemplate(w, "StructForm.html", form2)
+	if err != nil {
+		log.Printf("problem with template. %v", err)
+		return ""
+	}
+	return template.HTML(w.String())
+
+}
+
+func (h ConfigHistorianInflux) Name() string {
+	return h.HistorianName
+}
+func (h ConfigHistorianInflux) String() string {
+	return h.Name()
+}
+func (h *ConfigHistorianInflux) Update(form url.Values) error {
+	log.Printf("Would have saved. %v", form)
+
+	decoder := schema.NewDecoder()
+	err := decoder.Decode(h, form)
+	if err == nil {
+		system.Changes = true
+	}
+
+	return err
 }

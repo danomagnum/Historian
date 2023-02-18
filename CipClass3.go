@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/danomagnum/gologix"
+	"github.com/gorilla/schema"
 )
 
 type ConfigCIPClass3 struct {
@@ -195,4 +196,28 @@ func (e *ConfigCIPClass3) RenderEndpoints() template.HTML {
 		return ""
 	}
 	return template.HTML(w.String())
+}
+
+func (e *ConfigCIPClass3) RenderConfig() template.HTML {
+	encoder := schema.NewEncoder()
+
+	form := make(map[string][]string)
+	err := encoder.Encode(e, form)
+	if err != nil {
+		return ""
+	}
+
+	form2 := make(map[string]string)
+	for k := range form {
+		form2[k] = form[k][0]
+	}
+
+	w := new(bytes.Buffer)
+	err = templates.ExecuteTemplate(w, "StructForm.html", form2)
+	if err != nil {
+		log.Printf("problem with template. %v", err)
+		return ""
+	}
+	return template.HTML(w.String())
+
 }
