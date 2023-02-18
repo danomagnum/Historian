@@ -89,7 +89,12 @@ func api_ApplyWorkingConf(w http.ResponseWriter, r *http.Request) {
 }
 
 func api_CancelWorkingConf(w http.ResponseWriter, r *http.Request) {
-	system.Changes = false
-	system.WorkingConfig = system.ActiveConfig
+	var err error
+	system.WorkingConfig, err = ConfigLoad("active.json")
+	if err != nil {
+		log.Printf("Could not load active as working copy: %v", err)
+	} else {
+		system.Changes = false
+	}
 	api_Home(w, r)
 }

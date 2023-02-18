@@ -45,11 +45,14 @@ func main() {
 	////////////////////////
 	// Load Config
 	////////////////////////
-	system.ActiveConfig, err = ConfigLoad("cfg.json")
+	system.ActiveConfig, err = ConfigLoad("active.json")
 	if err != nil {
 		system.ActiveConfig = ConfigNew()
 	}
-	system.WorkingConfig = system.ActiveConfig
+	system.WorkingConfig, err = ConfigLoad("active.json")
+	if err != nil {
+		system.WorkingConfig = ConfigNew()
+	}
 
 	server_addr := fmt.Sprintf("%s:%d", system.ActiveConfig.General.Host, system.ActiveConfig.General.Port)
 	log.Printf("Starting server at %s", server_addr)
@@ -99,7 +102,18 @@ func main() {
 
 		// wait a bit before restarting.
 		time.Sleep(system.ActiveConfig.General.RestartDelay)
-		system.ActiveConfig = system.WorkingConfig
+		err = system.WorkingConfig.Save("active.json")
+		if err != nil {
+			log.Printf("Error: could not save active.json: %v", err)
+		}
+		err = system.WorkingConfig.Save(fmt.Sprintf("%s.json", time.Now().Format(time.RFC3339)))
+		if err != nil {
+			log.Printf("Error: could not save <timestamp>.json: %v", err)
+		}
+		system.ActiveConfig, err = ConfigLoad("active.json")
+		if err != nil {
+			log.Printf("Error: could not load active.json: %v", err)
+		}
 		system.Changes = false
 		log.Printf("Restarting...")
 	}
