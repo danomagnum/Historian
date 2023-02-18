@@ -52,6 +52,7 @@ func ConfigLoad(filename string) (Config, error) {
 	if err != nil {
 		return Config{}, fmt.Errorf("problem opening config file: %w", err)
 	}
+	defer f.Close()
 
 	j := json.NewDecoder(f)
 	c := Config{}
