@@ -10,30 +10,33 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type DataHistorian interface {
+type ConfigEditor interface {
 	Name() string
 	String() string
 	Update(url.Values) error
 	RenderConfig() template.HTML
 }
 
-type ApiGenericHistorian[T DataHistorian] struct {
+type apiConfigEditor[T ConfigEditor] struct {
 	ConfTypeName string
+	Path         string
 	Confs        []T
 }
 
-type tmplHistorianGenericData struct {
+type tmplConfigEditor struct {
 	System System
+	Path   string
 	Title  string
-	Conf   DataHistorian
+	Conf   ConfigEditor
 }
 
-func (gc ApiGenericHistorian[T]) Init(r *mux.Router) {
-	r.HandleFunc("/{name}/Edit/", gc.api_EditConf)
-	r.HandleFunc("/Add/", gc.api_NewConf)
+func (gc apiConfigEditor[T]) Init(r *mux.Router) {
+	sr := r.PathPrefix(gc.Path).Subrouter()
+	sr.HandleFunc("/{name}/Edit/", gc.api_EditConf)
+	sr.HandleFunc("/Add/", gc.api_NewConf)
 }
 
-func (gc ApiGenericHistorian[T]) api_EditConf(w http.ResponseWriter, r *http.Request) {
+func (gc apiConfigEditor[T]) api_EditConf(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	vars := mux.Vars(r)
 	targetName := vars["name"]
@@ -60,10 +63,11 @@ func (gc ApiGenericHistorian[T]) api_EditConf(w http.ResponseWriter, r *http.Req
 	gc.editConf(*conf, w, r)
 }
 
-func (gc ApiGenericHistorian[T]) editConf(conf DataHistorian, w http.ResponseWriter, r *http.Request) {
+func (gc apiConfigEditor[T]) editConf(conf ConfigEditor, w http.ResponseWriter, r *http.Request) {
 
-	dat := tmplHistorianGenericData{
+	dat := tmplConfigEditor{
 		System: system,
+		Path:   gc.Path,
 		Title:  fmt.Sprintf("Editing %s", gc.ConfTypeName),
 		Conf:   conf,
 	}
@@ -73,7 +77,7 @@ func (gc ApiGenericHistorian[T]) editConf(conf DataHistorian, w http.ResponseWri
 	}
 }
 
-func (gc ApiGenericHistorian[T]) api_NewConf(w http.ResponseWriter, r *http.Request) {
+func (gc apiConfigEditor[T]) api_NewConf(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	var conf T
 	system.Changes = true
@@ -83,7 +87,7 @@ func (gc ApiGenericHistorian[T]) api_NewConf(w http.ResponseWriter, r *http.Requ
 	gc.editConf(conf, w, r)
 }
 
-func (gc ApiGenericHistorian[T]) findConfByName(name string) (*T, bool) {
+func (gc apiConfigEditor[T]) findConfByName(name string) (*T, bool) {
 	for i := range gc.Confs {
 		if gc.Confs[i].Name() == name {
 			return &gc.Confs[i], true

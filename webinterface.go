@@ -43,11 +43,17 @@ func WebAPIStart() {
 	//router.PathPrefix("/Providers/CIPClass3/").Handler(http.StripPrefix("/Providers/CIPClass3", webApiCIPClass3_Handler))
 	//cipClass3Init(router.PathPrefix("/Providers/CIPClass3").Subrouter())
 
-	cipClass3Router := ApiGenericConfig[*ConfigCIPClass3]{ConfTypeName: "CIP Class 3", Confs: system.WorkingConfig.DataProviders.CIPClass3}
-	cipClass3Router.Init(router.PathPrefix("/Providers/CIPClass3").Subrouter())
+	apiConfigEditorWithEndpoints[*ConfigCIPClass3]{
+		ConfTypeName: "CIP Class 3",
+		Path:         "/Providers/CIPClass3",
+		Confs:        system.WorkingConfig.DataProviders.CIPClass3,
+	}.Init(router)
 
-	influxRouter := ApiGenericHistorian[*ConfigHistorianInflux]{ConfTypeName: "Influx DB", Confs: system.WorkingConfig.Historians.Influx}
-	influxRouter.Init(router.PathPrefix("/Historians/Influx").Subrouter())
+	apiConfigEditor[*ConfigHistorianInflux]{
+		ConfTypeName: "Influx DB",
+		Path:         "/Historians/Influx",
+		Confs:        system.WorkingConfig.Historians.Influx,
+	}.Init(router)
 
 	addr := fmt.Sprintf("%s:%d", system.ActiveConfig.General.Host, system.ActiveConfig.General.Port)
 	go http.ListenAndServe(addr, router)
