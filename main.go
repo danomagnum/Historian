@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
+	"path"
 	"time"
 )
 
@@ -40,16 +42,17 @@ var system System
 
 func main() {
 	system.State = StateStartup
+	flag.Parse()
 
 	var err error
 	////////////////////////
 	// Load Config
 	////////////////////////
-	system.ActiveConfig, err = ConfigLoad("active.json")
+	system.ActiveConfig, err = ConfigLoad(path.Join(*ConfigPath, "active.json"))
 	if err != nil {
 		system.ActiveConfig = ConfigNew()
 	}
-	system.WorkingConfig, err = ConfigLoad("active.json")
+	system.WorkingConfig, err = ConfigLoad(path.Join(*ConfigPath, "active.json"))
 	if err != nil {
 		system.WorkingConfig = ConfigNew()
 	}
@@ -102,15 +105,15 @@ func main() {
 
 		// wait a bit before restarting.
 		time.Sleep(system.ActiveConfig.General.RestartDelay)
-		err = system.WorkingConfig.Save("active.json")
+		err = system.WorkingConfig.Save(path.Join(*ConfigPath, "active.json"))
 		if err != nil {
 			log.Printf("Error: could not save active.json: %v", err)
 		}
-		err = system.WorkingConfig.Save(fmt.Sprintf("%s.json", time.Now().Format(time.RFC3339)))
+		err = system.WorkingConfig.Save(path.Join(*ConfigPath, fmt.Sprintf("%s.json", time.Now().Format(time.RFC3339))))
 		if err != nil {
 			log.Printf("Error: could not save <timestamp>.json: %v", err)
 		}
-		system.ActiveConfig, err = ConfigLoad("active.json")
+		system.ActiveConfig, err = ConfigLoad(path.Join(*ConfigPath, "active.json"))
 		if err != nil {
 			log.Printf("Error: could not load active.json: %v", err)
 		}

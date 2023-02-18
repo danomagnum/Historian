@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 
 	"html/template"
 
@@ -27,7 +28,6 @@ func WebAPIStart() {
 		log.Println("Cannot parse templates:", err)
 		os.Exit(-1)
 	}
-	//router := http.NewServeMux()
 	router := mux.NewRouter()
 	fs := http.FileServer(http.Dir("./static"))
 	router.HandleFunc("/", api_Home)
@@ -40,8 +40,6 @@ func WebAPIStart() {
 	router.HandleFunc("/Server/", api_ServerConf)
 	router.HandleFunc("/Providers/", api_ProidersConf)
 	router.HandleFunc("/Historians/", api_HistoriansConf)
-	//router.PathPrefix("/Providers/CIPClass3/").Handler(http.StripPrefix("/Providers/CIPClass3", webApiCIPClass3_Handler))
-	//cipClass3Init(router.PathPrefix("/Providers/CIPClass3").Subrouter())
 
 	apiConfigEditorWithEndpoints[*ConfigCIPClass3]{
 		ConfTypeName: "CIP Class 3",
@@ -96,7 +94,7 @@ func api_ApplyWorkingConf(w http.ResponseWriter, r *http.Request) {
 
 func api_CancelWorkingConf(w http.ResponseWriter, r *http.Request) {
 	var err error
-	system.WorkingConfig, err = ConfigLoad("active.json")
+	system.WorkingConfig, err = ConfigLoad(path.Join(*ConfigPath, "active.json"))
 	if err != nil {
 		log.Printf("Could not load active as working copy: %v", err)
 	} else {
