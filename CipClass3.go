@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"html/template"
 	"log"
 	"net/url"
 	"strconv"
@@ -131,7 +133,6 @@ func (e ConfigCIPClass3) String() string {
 }
 func (e *ConfigCIPClass3) Update(url.Values) error {
 	return nil
-
 }
 func (e ConfigCIPClass3) Endpoints() []any {
 	eps := make([]any, len(e.EndpointList))
@@ -184,4 +185,14 @@ func (e *ConfigCIPClass3) UpdateEndpoint(form url.Values) error {
 }
 func (e *ConfigCIPClass3) RemoveEndpoint(int) {
 
+}
+
+func (e *ConfigCIPClass3) RenderEndpoints() template.HTML {
+	w := new(bytes.Buffer)
+	err := templates.ExecuteTemplate(w, "Provider_CIPClass3.html", *e)
+	if err != nil {
+		log.Printf("problem with template. %v", err)
+		return ""
+	}
+	return template.HTML(w.String())
 }

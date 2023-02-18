@@ -35,15 +35,16 @@ func WebAPIStart() {
 	router.HandleFunc("/GetWorking/", api_GetWorkingConf)
 	router.HandleFunc("/LoadWorking/", api_LoadWorkingConf)
 	router.HandleFunc("/ApplyWorking/", api_ApplyWorkingConf)
+	router.HandleFunc("/CancelWorking/", api_CancelWorkingConf)
 	router.HandleFunc("/GetActive/", api_GetConfig)
 	router.HandleFunc("/Server/", api_ServerConf)
 	router.HandleFunc("/Providers/", api_ProidersConf)
 	router.HandleFunc("/Historians/", api_HistoriansConf)
 	//router.PathPrefix("/Providers/CIPClass3/").Handler(http.StripPrefix("/Providers/CIPClass3", webApiCIPClass3_Handler))
-	cipClass3Init(router.PathPrefix("/Providers/CIPClass3").Subrouter())
+	//cipClass3Init(router.PathPrefix("/Providers/CIPClass3").Subrouter())
 
 	cipClass3Router := ApiGenericConfig[*ConfigCIPClass3]{ConfTypeName: "CIP Class 3", Confs: system.WorkingConfig.DataProviders.CIPClass3}
-	cipClass3Router.Init(router.PathPrefix("/Providers2/CIPClass3").Subrouter())
+	cipClass3Router.Init(router.PathPrefix("/Providers/CIPClass3").Subrouter())
 
 	addr := fmt.Sprintf("%s:%d", system.ActiveConfig.General.Host, system.ActiveConfig.General.Port)
 	go http.ListenAndServe(addr, router)
@@ -81,5 +82,11 @@ func api_LoadWorkingConf(w http.ResponseWriter, r *http.Request) {
 
 func api_ApplyWorkingConf(w http.ResponseWriter, r *http.Request) {
 	system.ActiveContextCancel()
+	api_Home(w, r)
+}
+
+func api_CancelWorkingConf(w http.ResponseWriter, r *http.Request) {
+	system.Changes = false
+	system.WorkingConfig = system.ActiveConfig
 	api_Home(w, r)
 }

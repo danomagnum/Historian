@@ -19,6 +19,7 @@ type DataProvider interface {
 	NewEndpoint()
 	UpdateEndpoint(url.Values) error
 	RemoveEndpoint(int)
+	RenderEndpoints() template.HTML
 }
 
 type ApiGenericConfig[T DataProvider] struct {
