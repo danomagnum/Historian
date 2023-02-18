@@ -124,7 +124,6 @@ func (h ConfigHistorianInflux) String() string {
 	return h.Name()
 }
 func (h *ConfigHistorianInflux) Update(form url.Values) error {
-	log.Printf("Would have saved. %v", form)
 
 	decoder := schema.NewDecoder()
 	err := decoder.Decode(h, form)
