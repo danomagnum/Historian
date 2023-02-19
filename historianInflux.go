@@ -133,3 +133,17 @@ func (h *ConfigHistorianInflux) Update(form url.Values) error {
 
 	return err
 }
+
+var routerInflux = apiConfigEditor[*ConfigHistorianInflux]{
+	ConfTypeName: "Influx DB",
+	Path:         "/Historians/Influx",
+}
+
+func routerSetupInflux() {
+	routerInflux.Init(router)
+	routerInflux.Confs = system.WorkingConfig.Historians.Influx
+}
+
+func init() {
+	subrouters = append(subrouters, routerSetupInflux)
+}

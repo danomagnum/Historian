@@ -126,6 +126,9 @@ func (e EndpointCIPClass3) TypeAsInt() int {
 	return int(e.TagType)
 }
 
+// The functions in this next section are to support the web API
+// for editing the config
+
 func (e ConfigCIPClass3) Name() string {
 	return e.PLCName
 }
@@ -220,4 +223,23 @@ func (e *ConfigCIPClass3) RenderConfig() template.HTML {
 	}
 	return template.HTML(w.String())
 
+}
+
+// Here we create the web API for modifying the CIPClass3 Config.  We've got endpoints so we'll use the apiConfigEditorWithEndpoints
+// to handle most of the functionality.  The functions to support this are above.
+// We'll also need a function to initialize the routing and update the list of CIPClass3 Instances.
+// then we have to register that function as a subrouter.
+var routerCIPClass3 = apiConfigEditorWithEndpoints[*ConfigCIPClass3]{
+	ConfTypeName: "CIP Class 3",
+	Path:         "/Providers/CIPClass3",
+	//Confs:        system.WorkingConfig.DataProviders.CIPClass3,
+}
+
+func routerSetupCIPClass3() {
+	routerCIPClass3.Init(router)
+	routerCIPClass3.Confs = system.WorkingConfig.DataProviders.CIPClass3
+}
+
+func init() {
+	subrouters = append(subrouters, routerSetupCIPClass3)
 }

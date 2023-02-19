@@ -27,6 +27,7 @@ type apiConfigEditorWithEndpoints[T ConfigEditorWithEndpoints] struct {
 	ConfTypeName string
 	Path         string
 	Confs        []T
+	initialized  bool
 }
 
 type tmplConfigEditorWithEndpoints struct {
@@ -36,15 +37,19 @@ type tmplConfigEditorWithEndpoints struct {
 	Conf   ConfigEditorWithEndpoints
 }
 
-func (gc apiConfigEditorWithEndpoints[T]) Init(r *mux.Router) {
+func (gc *apiConfigEditorWithEndpoints[T]) Init(r *mux.Router) {
+	if gc.initialized {
+		return
+	}
 	sr := r.PathPrefix(gc.Path).Subrouter()
 	sr.HandleFunc("/{name}/Edit/", gc.api_EditConf)
 	sr.HandleFunc("/{name}/EditEndpoint/", gc.api_EditEndpoint)
 	sr.HandleFunc("/{name}/NewEndpoint/", gc.api_NewEndpoint)
 	sr.HandleFunc("/Add/", gc.api_NewConf)
+	gc.initialized = true
 }
 
-func (gc apiConfigEditorWithEndpoints[T]) api_EditConf(w http.ResponseWriter, r *http.Request) {
+func (gc *apiConfigEditorWithEndpoints[T]) api_EditConf(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	vars := mux.Vars(r)
 	targetName := vars["name"]
@@ -56,7 +61,7 @@ func (gc apiConfigEditorWithEndpoints[T]) api_EditConf(w http.ResponseWriter, r 
 	gc.editConf(*conf, w, r)
 }
 
-func (gc apiConfigEditorWithEndpoints[T]) editConf(conf ConfigEditorWithEndpoints, w http.ResponseWriter, r *http.Request) {
+func (gc *apiConfigEditorWithEndpoints[T]) editConf(conf ConfigEditorWithEndpoints, w http.ResponseWriter, r *http.Request) {
 
 	dat := tmplConfigEditorWithEndpoints{
 		System: system,
@@ -70,7 +75,7 @@ func (gc apiConfigEditorWithEndpoints[T]) editConf(conf ConfigEditorWithEndpoint
 	}
 }
 
-func (gc apiConfigEditorWithEndpoints[T]) api_NewConf(w http.ResponseWriter, r *http.Request) {
+func (gc *apiConfigEditorWithEndpoints[T]) api_NewConf(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	var conf T
 	system.Changes = true
@@ -80,7 +85,7 @@ func (gc apiConfigEditorWithEndpoints[T]) api_NewConf(w http.ResponseWriter, r *
 	gc.editConf(conf, w, r)
 }
 
-func (gc apiConfigEditorWithEndpoints[T]) api_EditEndpoint(w http.ResponseWriter, r *http.Request) {
+func (gc *apiConfigEditorWithEndpoints[T]) api_EditEndpoint(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	vars := mux.Vars(r)
 	targetName := vars["name"]
@@ -121,7 +126,7 @@ func (gc apiConfigEditorWithEndpoints[T]) api_EditEndpoint(w http.ResponseWriter
 
 }
 
-func (gc apiConfigEditorWithEndpoints[T]) api_NewEndpoint(w http.ResponseWriter, r *http.Request) {
+func (gc *apiConfigEditorWithEndpoints[T]) api_NewEndpoint(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	vars := mux.Vars(r)
 	targetName := vars["name"]
@@ -140,7 +145,7 @@ func (gc apiConfigEditorWithEndpoints[T]) api_NewEndpoint(w http.ResponseWriter,
 
 }
 
-func (gc apiConfigEditorWithEndpoints[T]) findConfByName(name string) (*T, bool) {
+func (gc *apiConfigEditorWithEndpoints[T]) findConfByName(name string) (*T, bool) {
 	for i := range gc.Confs {
 		if gc.Confs[i].Name() == name {
 			return &gc.Confs[i], true

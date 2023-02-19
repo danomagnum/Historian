@@ -21,6 +21,7 @@ type apiConfigEditor[T ConfigEditor] struct {
 	ConfTypeName string
 	Path         string
 	Confs        []T
+	initialized  bool
 }
 
 type tmplConfigEditor struct {
@@ -30,13 +31,17 @@ type tmplConfigEditor struct {
 	Conf   ConfigEditor
 }
 
-func (gc apiConfigEditor[T]) Init(r *mux.Router) {
+func (gc *apiConfigEditor[T]) Init(r *mux.Router) {
+	if gc.initialized {
+		return
+	}
 	sr := r.PathPrefix(gc.Path).Subrouter()
 	sr.HandleFunc("/{name}/Edit/", gc.api_EditConf)
 	sr.HandleFunc("/Add/", gc.api_NewConf)
+	gc.initialized = true
 }
 
-func (gc apiConfigEditor[T]) api_EditConf(w http.ResponseWriter, r *http.Request) {
+func (gc *apiConfigEditor[T]) api_EditConf(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	vars := mux.Vars(r)
 	targetName := vars["name"]
@@ -63,7 +68,7 @@ func (gc apiConfigEditor[T]) api_EditConf(w http.ResponseWriter, r *http.Request
 	gc.editConf(*conf, w, r)
 }
 
-func (gc apiConfigEditor[T]) editConf(conf ConfigEditor, w http.ResponseWriter, r *http.Request) {
+func (gc *apiConfigEditor[T]) editConf(conf ConfigEditor, w http.ResponseWriter, r *http.Request) {
 
 	dat := tmplConfigEditor{
 		System: system,
@@ -77,7 +82,7 @@ func (gc apiConfigEditor[T]) editConf(conf ConfigEditor, w http.ResponseWriter, 
 	}
 }
 
-func (gc apiConfigEditor[T]) api_NewConf(w http.ResponseWriter, r *http.Request) {
+func (gc *apiConfigEditor[T]) api_NewConf(w http.ResponseWriter, r *http.Request) {
 	templates, _ = template.ParseGlob(templatedir + "*") // TODO: remove once page debug is done
 	var conf T
 	system.Changes = true
@@ -87,7 +92,7 @@ func (gc apiConfigEditor[T]) api_NewConf(w http.ResponseWriter, r *http.Request)
 	gc.editConf(conf, w, r)
 }
 
-func (gc apiConfigEditor[T]) findConfByName(name string) (*T, bool) {
+func (gc *apiConfigEditor[T]) findConfByName(name string) (*T, bool) {
 	for i := range gc.Confs {
 		if gc.Confs[i].Name() == name {
 			return &gc.Confs[i], true

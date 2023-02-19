@@ -20,6 +20,9 @@ const templatedir = "./templates/"
 //}
 
 var templates *template.Template
+var router *mux.Router
+
+var subrouters = make([]func(), 0)
 
 func WebAPIStart() {
 	var err error
@@ -28,7 +31,7 @@ func WebAPIStart() {
 		log.Println("Cannot parse templates:", err)
 		os.Exit(-1)
 	}
-	router := mux.NewRouter()
+	router = mux.NewRouter()
 	fs := http.FileServer(http.Dir("./static"))
 	router.HandleFunc("/", api_Home)
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
@@ -41,20 +44,26 @@ func WebAPIStart() {
 	router.HandleFunc("/Providers/", api_ProidersConf)
 	router.HandleFunc("/Historians/", api_HistoriansConf)
 
-	apiConfigEditorWithEndpoints[*ConfigCIPClass3]{
-		ConfTypeName: "CIP Class 3",
-		Path:         "/Providers/CIPClass3",
-		Confs:        system.WorkingConfig.DataProviders.CIPClass3,
-	}.Init(router)
-
-	apiConfigEditor[*ConfigHistorianInflux]{
-		ConfTypeName: "Influx DB",
-		Path:         "/Historians/Influx",
-		Confs:        system.WorkingConfig.Historians.Influx,
-	}.Init(router)
+	//WebApi_SetupHistorians()
+	//WebApi_SetupProviders()
+	SetupSubrouters()
 
 	addr := fmt.Sprintf("%s:%d", system.ActiveConfig.General.Host, system.ActiveConfig.General.Port)
 	go http.ListenAndServe(addr, router)
+}
+
+func WebApi_SetupProviders() {
+	routerSetupCIPClass3()
+}
+
+func WebApi_SetupHistorians() {
+	routerSetupInflux()
+}
+
+func SetupSubrouters() {
+	for i := range subrouters {
+		subrouters[i]()
+	}
 }
 
 func api_GetConfig(w http.ResponseWriter, r *http.Request) {
@@ -94,11 +103,13 @@ func api_ApplyWorkingConf(w http.ResponseWriter, r *http.Request) {
 
 func api_CancelWorkingConf(w http.ResponseWriter, r *http.Request) {
 	var err error
+	log.Printf("Reloading working config to actual.")
 	system.WorkingConfig, err = ConfigLoad(path.Join(*ConfigPath, "active.json"))
 	if err != nil {
 		log.Printf("Could not load active as working copy: %v", err)
 	} else {
 		system.Changes = false
+		SetupSubrouters()
 	}
 	api_Home(w, r)
 }
